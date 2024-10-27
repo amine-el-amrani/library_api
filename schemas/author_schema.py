@@ -1,5 +1,5 @@
 from marshmallow import fields
-from schemas import ma
+from schemas.schemas import ma
 from models.author import Author
 
 class AuthorSchema(ma.SQLAlchemyAutoSchema):
