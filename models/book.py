@@ -1,6 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from models.db import db
+from models.author import Author
 
 class Book(db.Model):
     __tablename__ = 'books'
