@@ -1,7 +1,10 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint
+from flask_restful import Api
+from resources.book_resource import BookResource
 
-books_bp = Blueprint('books_bp', __name__)
+# Créer le Blueprint pour les livres
+books_bp = Blueprint('books', __name__)
+api = Api(books_bp)
 
-@books_bp.route('/', methods=['GET'])
-def get_books():
-    return jsonify({"message": "Welcome to the Books API"})
+# Ajouter les routes pour les livres
+api.add_resource(BookResource, '', '/<int:book_id>')
