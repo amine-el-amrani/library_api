@@ -1,47 +1,34 @@
 from flask_restful import Resource
+from flask import request
 from models.book import Book, db
-from flask import jsonify, request
 from schemas.book_schema import BookSchema
 from marshmallow import ValidationError
 
 book_schema = BookSchema()
+books_schema = BookSchema(many=True)
 
 class BookResource(Resource):
     def get(self, book_id=None):
         if book_id:
             book = Book.query.get(book_id)
-            if book:
-                return jsonify({
-                    "id":book.id,
-                    "title": book.title,
-                    "description": book.description,
-                    "publication_date": book.publication_date,
-                    "author_id": book.author_id
-                })
-            return{"message": "Book not found"}, 404
+            if not book:
+                return {"message": "Book not found"}, 404
+            return book_schema.dump(book), 200
         else:
             books = Book.query.all()
-            return jsonify([{
-                "id": book.id,
-                "title": book.title,
-                "description": book.description,
-                "publication_date": book.publication_date,
-                "author_id": book.author_id
-            } for book in books])
-    
+            return books_schema.dump(books), 200
+
     def post(self):
         try:
             data = book_schema.load(request.get_json())
         except ValidationError as err:
-            return {"errors",err.messages}, 400
-        if isinstance(data, Book):
-            new_book = data
-        else:
-            new_book = Book(**data)
+            return {"errors": err.messages}, 400
+
+        new_book = data if isinstance(data, Book) else Book(**data)
         db.session.add(new_book)
         db.session.commit()
         return {"message": "Book created", "book_id": new_book.id}, 201
-    
+
     def put(self, book_id):
         book = Book.query.get(book_id)
         if not book:
@@ -57,11 +44,12 @@ class BookResource(Resource):
 
         db.session.commit()
         return {"message": "Book updated", "book_id": book.id}, 200
-    
+
     def delete(self, book_id):
         book = Book.query.get(book_id)
-        if book:
-            db.session.delete(book)
-            db.session.commit()
-            return {"message": "Book deleted"}, 200
-        return {"message": "Book not found"}, 404
+        if not book:
+            return {"message": "Book not found"}, 404
+
+        db.session.delete(book)
+        db.session.commit()
+        return {"message": "Book deleted"}, 200
